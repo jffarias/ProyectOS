@@ -20,7 +20,6 @@ int eax,ebx,ecx,edx;
 
 struct listos
 {
-	/* data */
 	int actual
 	struct listos *siguiente;
 };
@@ -28,7 +27,6 @@ struct listos *list;
 
 struct ejecucion
 {
-	/* data */
 };
 
 struct terminados
