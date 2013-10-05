@@ -2,6 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <curses.h>
+/*header pid_t*/
+#include <unistd.h>
+#include <sys/types.h>
 
 int eax=0,ebx=0,ecx=0,edx=0,pc= 0;
 char auxIR[15];	
@@ -10,45 +13,101 @@ void imprime();
 int kbhit(void);
 int dispatcher();
 char nombreArchivo[50];
+int estado;
+int pid=1;
 
 struct pcb{
 int pid;
 int estado;
 int pc;
 int eax,ebx,ecx,edx;
+
+struct pcb *siguiente;
 }PCB;
 
-struct listos
+struct Nodolistos
 {
 	/* data */
-	int actual
-	struct listos *siguiente;
-};
-struct listos *list;
+	int actualPID;
+	char nombreArchivo[50];
 
-struct ejecucion
-{
-	/* data */
+	struct Nodolistos *siguiente;
 };
+struct Nodolistos *iniciolistos;
 
-struct terminados
-{
-	/* data */
-};
+/*funcion que inserta al final de la lista*/
+void insertaFinal(char *nameArchivo,int PID){
+	struct Nodolistos *temp, *temp2;
+	//Apartamos ram para nuevo nodo
+	temp = (struct Nodolistos *) malloc(sizeof(struct Nodolistos));
+	//llenamos campos con los valores recibidos
+	temp ->actualPID = PID;
+	strcpy(temp->nombreArchivo,nameArchivo);
+	temp->siguiente = NULL;
+
+	if (iniciolistos==NULL)//si es el primero, apunta a nuevo nodo
+	{
+		iniciolistos = temp;
+	}else{ //buscamos el ultimo nodo
+		temp2=iniciolistos;
+		while(temp2->siguiente != NULL){
+			temp2=temp2->siguiente;
+		}
+		temp2->siguiente=temp;
+	}
+}
+
+void moverFinal(){
+	struct Nodolistos *temp, *auxMover;//temp: recorre la lista, auxMover: se movera al final.
+	temp = iniciolistos;
+	auxMover=NULL;
+
+		while(temp!=NULL){
+
+			temp=temp->siguiente;
+			if(temp ->siguiente!=NULL && auxMover==NULL){
+				auxMover=iniciolistos;
+			}
+			if(temp->siguiente==NULL && auxMover==NULL){
+				free(temp);
+			}
+			if(temp->siguiente==NULL && auxMover!=NULL){
+				iniciolistos=auxMover->siguiente;
+				temp->siguiente=auxMover;
+				auxMover->siguiente=NULL;
+			}
+		}
+}
+
+void MuestraArch(){
+	struct Nodolistos *temp;
+	int i=1;
+	temp=iniciolistos;
+	while(temp != NULL){
+		printf("PIB de Archivos: %d\n", temp->actualPID);
+		printf("nombreArchivo: %s\n",temp->nombreArchivo );
+		i++;
+		temp=temp->siguiente;
+	}
+}
+
+int dispatcher(){
+	struct Nodolistos *temp;
+	temp=iniciolistos;
+	if(temp==NULL){
+		printf("Lista de listos VACIA\n");
+	}else{
+		proceso(temp->nombreArchivo);
+	}
+}
+
 void saveContext(){
 PCB.pc =pc;
 PCB.eax=eax;
 PCB.ebx= ebx;
 PCB.ecx= ecx;
 PCB.edx= edx;
-
 }
-
-int dispatcher(){
-	
-}
-
-
 
 int proceso(char archi[]){
 	eax=0,ebx=0,ecx=0,edx=0;
@@ -70,20 +129,6 @@ int proceso(char archi[]){
 	char del[4]=", \n";
 	char del2[2]="\n";
 	activo = 1;	
-	initscr();
-	mvprintw(1,3,"$");
-
-	mvprintw(3,2,"------------------------CPU------------------------");
-	mvprintw(4,2,"PC\tIR\t\tEAX\tEBX\tECX\tEDX\n");
-
-
-	mvprintw(10,2,"-----------------------PCB------------------------");
-	mvprintw(11,2,"PID\tEstado\t\tPC\tIR\tEAX\tEBX\tEDX\tECX\n");
-
-
-
-
-
 
 	if((archivo = fopen(nombreArchivo,"r"))!=NULL){
 		//printf("archivo abierto correctamente\n\n");
@@ -123,7 +168,7 @@ int proceso(char archi[]){
 						operacion=8;
 					}
 					if(operacion==8){
-						printf("adios\n");
+						//printf("adios\n");
 						estado= 0;
 						//exit(1);
 
@@ -211,7 +256,6 @@ int proceso(char archi[]){
 										if(operador2<0){printf("\nel valor es menor que cero\n");break;}	
 									}
 
-
 									/*Realizamos Operaciones*/
 									/*MOV*/
 									if(operacion==1){
@@ -274,15 +318,17 @@ int proceso(char archi[]){
 										}else{
 											edx=operador1;
 										}
-								}
-
-								}
-							
+									}
+								}							
 					
 					imprime(pc);
 					
 					pc++;
 					quantum++;
+					if(quantum%3==0){
+						//moverFinal();
+						saveContext();
+					}
 					refresh();
 				}
 			
@@ -298,7 +344,17 @@ return 0;
 
 
 void imprime(int pc){
-	//refresh();
+	
+	initscr();
+	mvprintw(1,3,"$");
+
+	mvprintw(3,2,"------------------------CPU------------------------");
+	mvprintw(4,2,"PC\tIR\t\tEAX\tEBX\tECX\tEDX\n");
+
+
+	mvprintw(10,2,"-----------------------PCB------------------------");
+	mvprintw(11,2,"PID\tEstado\t\tPC\tIR\tEAX\tEBX\tEDX\tECX\n");
+
 	refresh();mvprintw(5,2,"%d",pc);refresh();
 	refresh();mvprintw(5,8,"%s      ",auxIR);
 	refresh();mvprintw(5,24,"%X     ",eax);
@@ -310,18 +366,25 @@ void imprime(int pc){
 	mvprintw(12,48,"%X",PCB.ebx);
 	mvprintw(12,56,"%X",PCB.ecx);
 	mvprintw(12,64,"%X",PCB.edx);
-	usleep(700000);			
-	if(kbhit()){
-	saveContext();
-		pc= 0;
-		mvscanw(1,5,"%s",nombreArchivo);
-		if (strcmp(nombreArchivo,"salir")==0){
-			mvprintw(12,3,"salir");
-			exit(0);
+	usleep(700000);
+	
+		if(kbhit()){
+			refresh();
+			mvscanw(2,5,"%s",nombreArchivo);
+			if(strcmp(nombreArchivo,"salir")==0){
+				endwin();
+				//MuestraArch();
+				exit(0);
+			}else{
+				pid++;
+				//saveContext();
+				insertaFinal(nombreArchivo,pid);
+				moverFinal();
+				dispatcher();
+			}
+			//MuestraArch();
 		}
-		proceso(nombreArchivo);	
-		endwin();	
-	}
+
 }
 
 int kbhit(void) 
@@ -343,24 +406,17 @@ int kbhit(void)
 
 }
 
-
-
-
 int  main(void){
-	//refresh();
-	//proceso(cad);
+	//declaracion cabezera de listos
+	iniciolistos=NULL;
 	initscr();
 	mvprintw(2,3,"$");
 	mvscanw(2,5,"%s",nombreArchivo);
-	refresh();//usleep(10000000);
-		if(kbhit()){
-			mvscanw(1,5,"%s",nombreArchivo);
-			
-		}
-		proceso(nombreArchivo);
-	endwin();
+	insertaFinal(nombreArchivo,pid);
+	refresh();
+	dispatcher();
 
-	//endwin();
+	endwin();
 return 0;
 }
 
