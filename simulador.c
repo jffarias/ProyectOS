@@ -27,11 +27,21 @@ struct pcb *siguiente;
 
 struct Nodolistos
 {
+<<<<<<< HEAD
 	/* data */
 	int actualPID;
 	char nombreArchivo[50];
 
 	struct Nodolistos *siguiente;
+=======
+	int actual
+	struct listos *siguiente;
+};
+struct listos *list;
+
+struct ejecucion
+{
+>>>>>>> 38bd80056778b6597828aedb5a9e351ca34179a8
 };
 struct Nodolistos *iniciolistos;
 
