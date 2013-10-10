@@ -12,19 +12,6 @@ char nombreArchivo[50];
 char auxarchi[15];
 int pid=1;
 
-void dispatcher();
-int deletePID(int pid);
-/*void ejecucion(char archi[],int pid);*/
-void imprime();
-void imprimePCB(char archi[],int pidpcb);
-void insertFinal(char *nameArchivo,int PID);
-int kbhit(void);
-int moveFinal(int pidmover);
-void MuestraArch();
-int proceso(char archi[],int pid);
-void readArch();
-void saveContext();
-void status(int edo);
 
 /*estructuras para colas*/
 struct Nodolistos{
@@ -45,6 +32,19 @@ struct Nodolistos *iniciolistos;
 /*+++++++++++++++++++++++++++++*/
 
 /*++++FUNCIONES++++*/
+void dispatcher();
+int deletePID(int pid);
+/*void ejecucion(char archi[],int pid);*/
+void imprime();
+void imprimePCB(char archi[],int pidpcb);
+void insertFinal(char *nameArchivo,int PID);
+int kbhit(void);
+int moveFinal(int pidmover);
+void MuestraArch();
+int proceso(char archi[],int pid);
+void readArch();
+void saveContext(int pidsc);
+void status(int edo);
 
 void dispatcher(){
 	struct Nodolistos *temp;
@@ -103,7 +103,7 @@ void imprimePCB(char archi[],int pidpcb){
 	int renglon=12;
 	mvprintw(10,2,"-----------------------PCB------------------------");
 	mvprintw(11,2,"PID\tArch\tEstado\tPC\tIR\tEAX\tEBX\tEDX\tECX\n");	
-		mvprintw(renglon,1,"                                                                                                                       ");
+		mvprintw(renglon,1,"                                                                ");
 		refresh();mvprintw(renglon+pidpcb,3,"%d",iniciolistos->actualPID=pidpcb);
 		refresh();mvprintw(renglon+pidpcb,8,"%s",strcpy(iniciolistos->nombreArch,archi));
 		refresh();mvprintw(renglon+pidpcb,24,"%d",iniciolistos->pc=pc);
@@ -192,11 +192,11 @@ void MuestraArch(){
 
 
 
-int proceso(char archi[],int pidproceso){
+void proceso(char archi[],int linea,int pidproceso){
+
 	eax=0,ebx=0,ecx=0,edx=0;
 	int quantum = 0;
 	FILE *archivo;
-	struct Nodolistos *pcbprocess;
 	char *instruccion;
 	char *registroextra;
 	char *registro;
@@ -220,7 +220,7 @@ int proceso(char archi[],int pidproceso){
 			if(strcmp(IR,"\n")==0){printf("tienes un renglon vacio,pc = %d\n",pc);continue;}//verifica si hay un renglon vacio
 			else{
 				if(feof(archivo)){
-					moveFinal(pidproceso);
+					break;
 				}else{
 					strcpy(auxIR,IR);
 					strtok(auxIR,del2);
@@ -400,11 +400,9 @@ int proceso(char archi[],int pidproceso){
 
 					if (quantum%3==0){
 						//estado=2;
-						//saveContext();
+						saveContext(pidproceso);
 						imprimePCB(archi,pidproceso);
-						//status(estado);
-						//fclose(archivo);
-						goto etiqueta_1;
+						break;
 						
 					}
 					//status(estado);
@@ -412,18 +410,23 @@ int proceso(char archi[],int pidproceso){
 
 			}//fin else strcmp
 		}//fin while
-
 		fclose(archivo);
-		printf("archivorecrrado\n");
+		mvprintw(30,5,"%s","archivo cerrado");
 		
 	}else{
 		printf("error al abrir");
 	}
 	//moveFinal(pidproceso);
-	etiqueta_1:
-	moveFinal(pidproceso);
-	dispatcher();
+	
 return 0;	
+}
+
+void ejecucion(char archi[],int pidejec){
+	linea=returncontex(pidejec);
+	proceso(archi,linea,pidejec);
+	moveFinal(archi);
+	dispatcher();
+
 }
 
 void readArch(){
@@ -433,6 +436,15 @@ void readArch(){
 		insertFinal(nombreArchivo,pid);
 		refresh();
 		dispatcher();	
+}
+
+void saveContext(int pidsc){
+	//que guarde los datos y el pid del nodo leido
+	struct Nodolistos *s;
+	s=iniciolistos;
+	if(s->actualPID==pidsc){
+		mvprintw(33,5,"%d:encontrado",s->actualPID);
+	}
 }
 
 /*++++FIN FUNCIONES++++*/
