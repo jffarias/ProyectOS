@@ -153,8 +153,8 @@ void imprimelist(){
 		mvprintw(24,90,"listos");
 		while(temp9!=NULL){
 			refresh();
-			mvprintw(25+cont,90,"PID: %d", temp9->actualPID);refresh();
-			mvprintw(25+cont,100,"Arc: %s", temp9->fileName);refresh();
+			mvprintw(26+cont,90,"PID: %d", temp9->actualPID);refresh();
+			mvprintw(26+cont,100,"Arc: %s", temp9->fileName);refresh();
 			cont++;
 			//mvprintw(12+temp2->actualPID,85,temp2->nombreArchivo );
 			temp9=temp9->siguiente;
@@ -164,17 +164,64 @@ void imprimelist(){
 }
 
 void imprimePCB(char archi[],int pidpcb){
+	struct Nodolistos *temp10;
+	temp10= iniciolistos;
+	int cont= 1;
+	//refresh();mvprintw(13,15,"%s","ejec");refresh();
+	if (temp10==NULL)mvprintw(12+cont+1,3,"Lista vacia                                                              ");
+	else{
+		
+		while(temp10!=NULL){
+			refresh();mvprintw(12+cont,3,"                                                                   ");
+			//mvprintw(12+cont,0,"                                                                      ");
+			//refresh();
+			//mvprintw(12+pidpcb,0,"                                                                                     ");
+			refresh();mvprintw(12+cont,3,"%d",temp10->actualPID);refresh();
+			refresh();mvprintw(12+cont,8,"%s",temp10->fileName);
 
-		refresh();mvprintw(12+pidpcb,3,"%d",pidpcb);
-		refresh();mvprintw(12+pidpcb,8,"%s",archi);
-		refresh();mvprintw(12+pidpcb,15,"%s","list");
-		refresh();mvprintw(12+pidpcb,24,"%d",pc);
-		refresh();mvprintw(12+pidpcb,27,"%s",auxIR);
-		refresh();mvprintw(12+pidpcb,42,"%X",eax);
-		refresh();mvprintw(12+pidpcb,49,"%X",ebx);
-		refresh();mvprintw(12+pidpcb,56,"%X",ecx);
-		refresh();mvprintw(12+pidpcb,64,"%X",edx);
-}
+			refresh();mvprintw(12+cont,15,"%s","list");
+			refresh();mvprintw(12+cont,24,"%d",temp10->pc);
+			refresh();mvprintw(12+cont,27,"%s",temp10->auxIR);refresh();
+			refresh();mvprintw(12+cont,42,"%X",temp10->eax);
+			refresh();mvprintw(12+cont,49,"%X",temp10->ebx);
+			refresh();mvprintw(12+cont,56,"%X",temp10->ecx);
+			refresh();mvprintw(12+cont,64,"%X",temp10->edx);
+			
+			cont++;
+			//mvprintw(12+temp2->actualPID,85,temp2->nombreArchivo );
+			temp10=temp10->siguiente;
+		}
+		struct Nodoterminados *temp2;
+	temp2=inicioterminados;
+
+	if(temp2==NULL){
+		refresh();mvprintw(11,75,"%s","Lista vacia");
+	}else{
+		while(temp2!=NULL){
+			
+			mvprintw(12,1,"                                                                ");
+			refresh();mvprintw(12+temp2->actualPID,3,"%d",temp2->actualPID);
+			//refresh();mvprintw(12+temp2->actualPID,8,"%s",archi);
+			refresh();mvprintw(12+temp2->actualPID,15,"%s","term");
+			refresh();mvprintw(12+temp2->actualPID,24,"%d",temp2->pc);
+			refresh();mvprintw(12+temp2->actualPID,27,"%s",temp2->auxIR);
+			refresh();mvprintw(12+temp2->actualPID,42,"%X",temp2->eax);
+			refresh();mvprintw(12+temp2->actualPID,49,"%X",temp2->ebx);
+			refresh();mvprintw(12+temp2->actualPID,56,"%X",temp2->ecx);
+			refresh();mvprintw(12+temp2->actualPID,64,"%X",temp2->edx);
+			
+			refresh();mvprintw(24,75,"terminados");
+			refresh();mvprintw(25+temp2->actualPID,75,"PID: %d", temp2->actualPID);refresh();
+			//mvprintw(12+temp2->actualPID,85,temp2->nombreArchivo );
+
+			temp2=temp2->siguiente;
+		}
+
+	}
+
+
+	}
+		}
 
 void imprimeTerm(){
 
@@ -203,6 +250,7 @@ void imprimeTerm(){
 
 			temp2=temp2->siguiente;
 		}
+
 	}	
 }
 
@@ -386,6 +434,7 @@ int proceso(char archi[],int pidproceso){
 							inserterminados(auxarchi,pidproceso);
 							imprimeTerm();
 							deletePID(pidproceso);
+							imprimePCB(archi,pidproceso);
 							//endwin();
 							break;
 						}else{
@@ -668,7 +717,7 @@ int seelist(){
 
 void status(int pidsta,int edo){
 	if(edo==1){
-		refresh();mvprintw(12+pidsta,15,"%s","ejec");
+		refresh();mvprintw(13,15,"%s","ejec");
 	}
 }
 
